@@ -170,10 +170,10 @@ def train():
             #grads = opt.compute_gradients(loss)
             grads = opt.compute_gradients(loss,tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope))
 
-            for grad, var in grads:
-              if grad is not None:
-                summaries.append(
-                  tf.contrib.deprecated.histogram_summary(var.op.name +  '/%s_%d_orig_gradients' % (cifar10.TOWER_NAME, i),grad))
+            #for grad, var in grads:
+            #  if grad is not None:
+            #    summaries.append(
+            #      tf.contrib.deprecated.histogram_summary(var.op.name +  '/%s_%d_orig_gradients' % (cifar10.TOWER_NAME, i),grad))
 
             ## Clip gradients
             #if FLAGS.clip_factor > 1.0e-5:
@@ -193,10 +193,10 @@ def train():
               # Always calculate scalers whatever clip_factor is. Returns max value when clip_factor==0.0
               scalers = cifar10_common.gradient_binarizing_scalers(grads, FLAGS.clip_factor)
               tower_scalers.append(scalers)
-              for scaler, var in scalers:
-               if scaler is not None:
-                 summaries.append(
-                   tf.contrib.deprecated.scalar_summary(var.op.name +  '/%s_%d_scaler' % (cifar10.TOWER_NAME, i),scaler))
+              #for scaler, var in scalers:
+              # if scaler is not None:
+              #   summaries.append(
+              #     tf.contrib.deprecated.scalar_summary(var.op.name +  '/%s_%d_scaler' % (cifar10.TOWER_NAME, i),scaler))
 
             #for grad, var in grads:
             #  if grad is not None:
@@ -224,10 +224,10 @@ def train():
             # Keep track of the gradients across all towers.
             tower_grads[i]=grads
 
-            for grad, var in grads:
-             if grad is not None:
-               summaries.append(
-                 tf.contrib.deprecated.histogram_summary(var.op.name +  '/%s_%d_bin_gradients' % (cifar10.TOWER_NAME, i),grad))
+            #for grad, var in grads:
+            # if grad is not None:
+            #   summaries.append(
+            #     tf.contrib.deprecated.histogram_summary(var.op.name +  '/%s_%d_bin_gradients' % (cifar10.TOWER_NAME, i),grad))
 
     # We must calculate the mean of each gradient. Note that this is the
     # synchronization point across all towers.
@@ -263,9 +263,9 @@ def train():
       apply_gradient_op.append( opt.apply_gradients(tower_grad, global_step=global_step) )
 
     # Add histograms for trainable variables.
-    for var in tf.trainable_variables():
-      summaries.append(
-          tf.contrib.deprecated.histogram_summary(var.op.name, var))
+    #for var in tf.trainable_variables():
+    #  summaries.append(
+    #      tf.contrib.deprecated.histogram_summary(var.op.name, var))
 
     # Track the moving averages of all trainable variables.
     variable_averages = tf.train.ExponentialMovingAverage(
