@@ -93,7 +93,7 @@ def tower_loss(scope):
     # Remove 'tower_[0-9]/' from the name in case this is a multi-GPU training
     # session. This helps the clarity of presentation on tensorboard.
     #loss_name = re.sub('%s_[0-9]*/' % cifar10.TOWER_NAME, '', l.op.name)
-    if re.compile(".*(cross_entropy)|(total_loss).*").match(l.op.name):
+    if re.compile(".*((cross_entropy)|(total_loss)).*").match(l.op.name):
       tf.contrib.deprecated.scalar_summary(l.op.name, l)
 
   return total_loss
@@ -220,7 +220,7 @@ def train():
             # Clip gradients. Always clip since the max value in towers may be different even when clip_factor==0.0
             grads = cifar10_common.clip_gradients_by_thresholds(tower_grads[i], mean_scalers)
             # Binarize gradients
-            grads = cifar10_common.stochastical_binarize_gradients(grads)
+            grads = cifar10_common.stochastical_binarize_gradients(grads, mean_scalers)
             # Keep track of the gradients across all towers.
             tower_grads[i]=grads
 
@@ -259,8 +259,13 @@ def train():
     # Apply the gradients to adjust the shared variables.
     #apply_gradient_op = opt.apply_gradients(grads, global_step=global_step)
     apply_gradient_op = []
-    for tower_grad in tower_grads:
-      apply_gradient_op.append( opt.apply_gradients(tower_grad, global_step=global_step) )
+    #for tower_grad in tower_grads:
+    #  apply_gradient_op.append( opt.apply_gradients(tower_grad, global_step=global_step) )
+    for i in xrange(FLAGS.num_gpus):
+      with tf.device('/gpu:%d' % i):
+        with tf.name_scope('%s_%d' % (cifar10.TOWER_NAME, i)) as scope:
+          apply_gradient_op.append(opt.apply_gradients(tower_grads[i],
+                                          global_step=global_step))
 
     # Add histograms for trainable variables.
     #for var in tf.trainable_variables():
