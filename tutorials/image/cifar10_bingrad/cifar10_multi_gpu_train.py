@@ -110,7 +110,7 @@ def train():
 
     # Calculate the learning rate schedule.
     num_batches_per_epoch = (cifar10.NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN /
-                             FLAGS.batch_size)
+                             FLAGS.batch_size) # FLAGS.num_gpus is not divided when opt.apply_gradients is done in each GPU to increment global_step
     decay_steps = int(num_batches_per_epoch * cifar10.NUM_EPOCHS_PER_DECAY)
 
     # Decay the learning rate exponentially based on the number of steps.
@@ -274,7 +274,7 @@ def train():
 
     # Track the moving averages of all trainable variables.
     variable_averages = tf.train.ExponentialMovingAverage(
-        cifar10.MOVING_AVERAGE_DECAY, global_step)
+        cifar10.MOVING_AVERAGE_DECAY, global_step/FLAGS.num_gpus)
     variables_averages_op = variable_averages.apply(tf.trainable_variables())
 
     # Group all updates to into a single train op.
