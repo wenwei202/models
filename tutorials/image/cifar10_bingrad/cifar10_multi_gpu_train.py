@@ -93,8 +93,8 @@ def tower_loss(scope):
     # Remove 'tower_[0-9]/' from the name in case this is a multi-GPU training
     # session. This helps the clarity of presentation on tensorboard.
     #loss_name = re.sub('%s_[0-9]*/' % cifar10.TOWER_NAME, '', l.op.name)
-    if re.compile(".*((cross_entropy)|(total_loss)).*").match(l.op.name):
-      tf.contrib.deprecated.scalar_summary(l.op.name, l)
+    #if re.compile(".*((cross_entropy)|(total_loss)).*").match(l.op.name):
+    tf.contrib.deprecated.scalar_summary(l.op.name, l)
 
   return total_loss
 
@@ -102,6 +102,7 @@ def tower_loss(scope):
 def train():
   """Train CIFAR-10 for a number of steps."""
   with tf.Graph().as_default(), tf.device('/cpu:0'):
+    tf.set_random_seed(FLAGS.seed)
     # Create a variable to count the number of train() calls. This equals the
     # number of batches processed * FLAGS.num_gpus.
     global_step = tf.get_variable(
@@ -170,10 +171,10 @@ def train():
             #grads = opt.compute_gradients(loss)
             grads = opt.compute_gradients(loss,tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope))
 
-            #for grad, var in grads:
-            #  if grad is not None:
-            #    summaries.append(
-            #      tf.contrib.deprecated.histogram_summary(var.op.name +  '/%s_%d_orig_gradients' % (cifar10.TOWER_NAME, i),grad))
+            for grad, var in grads:
+              if grad is not None:
+                summaries.append(
+                  tf.contrib.deprecated.histogram_summary(var.op.name +  '/%s_%d_orig_gradients' % (cifar10.TOWER_NAME, i),grad))
 
             ## Clip gradients
             #if FLAGS.clip_factor > 1.0e-5:
@@ -219,15 +220,20 @@ def train():
           if 1 == FLAGS.grad_bits:
             # Clip gradients. Always clip since the max value in towers may be different even when clip_factor==0.0
             grads = cifar10_common.clip_gradients_by_thresholds(tower_grads[i], mean_scalers)
+            for grad, var in grads:
+             if grad is not None:
+               summaries.append(
+                 tf.contrib.deprecated.histogram_summary(var.op.name +  '/%s_%d_clipped_gradients' % (cifar10.TOWER_NAME, i),grad))
+
             # Binarize gradients
             grads = cifar10_common.stochastical_binarize_gradients(grads, mean_scalers)
             # Keep track of the gradients across all towers.
             tower_grads[i]=grads
 
-            #for grad, var in grads:
-            # if grad is not None:
-            #   summaries.append(
-            #     tf.contrib.deprecated.histogram_summary(var.op.name +  '/%s_%d_bin_gradients' % (cifar10.TOWER_NAME, i),grad))
+            for grad, var in grads:
+             if grad is not None:
+               summaries.append(
+                 tf.contrib.deprecated.histogram_summary(var.op.name +  '/%s_%d_bin_gradients' % (cifar10.TOWER_NAME, i),grad))
 
     # We must calculate the mean of each gradient. Note that this is the
     # synchronization point across all towers.
@@ -268,9 +274,9 @@ def train():
                                           global_step=global_step))
 
     # Add histograms for trainable variables.
-    #for var in tf.trainable_variables():
-    #  summaries.append(
-    #      tf.contrib.deprecated.histogram_summary(var.op.name, var))
+    for var in tf.trainable_variables():
+      summaries.append(
+          tf.contrib.deprecated.histogram_summary(var.op.name, var))
 
     # Track the moving averages of all trainable variables.
     variable_averages = tf.train.ExponentialMovingAverage(

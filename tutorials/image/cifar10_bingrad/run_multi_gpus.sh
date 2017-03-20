@@ -7,12 +7,12 @@ DATA_DIR=/home/wew57/dataset/cifar10_data_0/
 NUM_GPUS=2
 export CUDA_VISIBLE_DEVICES=0,1
 OPTIMIZER=adam
-GRAD_BITS=32
+GRAD_BITS=1
 BASE_LR=0.0002
-CLIP_FACTOR=0.0 # 0.0 means no clipping
+CLIP_FACTOR=2.5 # 0.0 means no clipping
 TOTAL_BATCH_SIZE=128
 BATCH_SIZE=$( expr ${TOTAL_BATCH_SIZE} / ${NUM_GPUS} )
-SEED=${RANDOM}
+SEED=123 # ${RANDOM}
 
 if [ ! -d "$ROOT_WORKSPACE" ]; then
   echo "${ROOT_WORKSPACE} does not exsit!"
