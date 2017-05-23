@@ -260,7 +260,7 @@ Note that in this example each replica has a single tower that uses one GPU.
 The command-line flags `worker_hosts` and `ps_hosts` specify available servers.
 The same binary will be used for both the `worker` jobs and the `ps` jobs.
 Command line flag `job_name` will be used to specify what role a task will be
-playing and `task_id` will be used to idenify which one of the jobs it is
+playing and `task_id` will be used to identify which one of the jobs it is
 running. Several things to note here:
 
 *   The numbers of `ps` and `worker` tasks are inferred from the lists of hosts
@@ -366,6 +366,13 @@ I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:206] Initialize HostPo
 I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:206] Initialize HostPortsGrpcChannelCache for job worker -> {worker0.example.com:2222, worker1.example.com:2222}
 I tensorflow/core/distributed_runtime/rpc/grpc_server_lib.cc:202] Started server with target: grpc://localhost:2222
 ```
+
+If you compiled TensorFlow (from v1.1-rc3) with VERBS support and you have the
+required device and IB verbs SW stack, you can specify --protocol='grpc+verbs'
+In order to use Verbs RDMA for Tensor passing between workers and ps.
+Need to add the the --protocol flag in all tasks (ps and workers).
+The default protocol is the TensorFlow default protocol of grpc.
+
 
 [Congratulations!](https://www.youtube.com/watch?v=9bZkp7q19f0) You are now
 training Inception in a distributed manner.
@@ -749,7 +756,7 @@ batch-splitting the model across multiple GPUs.
     permit training the model with higher learning rates.
 
 *   Often the GPU memory is a bottleneck that prevents employing larger batch
-    sizes. Employing more GPUs allows one to user larger batch sizes because
+    sizes. Employing more GPUs allows one to use larger batch sizes because
     this model splits the batch across the GPUs.
 
 **NOTE** If one wishes to train this model with *asynchronous* gradient updates,
