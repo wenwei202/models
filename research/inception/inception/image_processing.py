@@ -271,15 +271,6 @@ def distort_image(image, height, width, bbox, thread_id=0, scope=None):
     distorted_image = distort_color(distorted_image, thread_id)
 
     if not thread_id:
-                       tf.expand_dims(distorted_image, 0))
-
-    # Randomly flip the image horizontally.
-    distorted_image = tf.image.random_flip_left_right(distorted_image)
-
-    # Randomly distort the colors.
-    distorted_image = distort_color(distorted_image, thread_id)
-
-    if not thread_id:
       tf.summary.image('final_distorted_image',
                        tf.expand_dims(distorted_image, 0))
     return distorted_image
