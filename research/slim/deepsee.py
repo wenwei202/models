@@ -150,8 +150,9 @@ def main(_):
 
     ###
     max_logits = tf.reduce_max(logits, axis=1)
-    themap = tf.gradients(max_logits, images)
-    myop = tf.summary.image('themaps', themap[0], max_outputs=10)
+    themaps = tf.gradients(max_logits, images)
+    tf.summary.image('themaps', themaps[0], max_outputs=10)
+    tf.summary.image('images', images, max_outputs=10)
 
     predictions = tf.argmax(logits, 1)
     labels = tf.squeeze(labels)
@@ -189,7 +190,7 @@ def main(_):
         checkpoint_path=checkpoint_path,
         logdir=FLAGS.eval_dir,
         num_evals=num_batches,
-        eval_op=list(names_to_updates.values())+themap,
+        eval_op=list(names_to_updates.values())+themaps,
         variables_to_restore=variables_to_restore)
 
 
