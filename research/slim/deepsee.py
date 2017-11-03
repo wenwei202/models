@@ -153,7 +153,7 @@ def main(_):
     themaps = tf.gradients(max_logits, images)
     themaps = themaps[0]
     #themaps = tf.multiply(tf.sign(images), themaps)
-    themaps = tf.multiply(images, themaps)
+    themaps = tf.multiply(images, themaps) # Count the contribution of each pixel to classification
     #themaps = tf.abs(themaps)
 
     # negative and positive maps contributed to classification
@@ -169,6 +169,7 @@ def main(_):
     max_see = tf.reduce_max(max_see, -2, keep_dims=True)
     max_see = tf.reduce_max(max_see, -3, keep_dims=True)
     pos_maps = tf.divide(pos_maps, max_see)
+    # rgb to gray
     pos_maps = tf.image.rgb_to_grayscale(pos_maps)
 
     # add to summary
@@ -178,9 +179,15 @@ def main(_):
     tf.summary.image('pos_maps', pos_maps, max_outputs=max_outputs)
     #tf.summary.image('neg_maps', neg_maps, max_outputs=max_outputs)
 
-
     predictions = tf.argmax(logits, 1)
     labels = tf.squeeze(labels)
+
+    for cnt in range(0, max_outputs):
+      cur_predict = tf.reshape(tf.gather(predictions, [cnt]), [])
+      cur_label = tf.reshape(tf.gather(labels, [cnt]),[])
+      tf.summary.scalar('prediction/%d'%(cnt),cur_predict)
+      tf.summary.scalar('label/%d' % (cnt), cur_label)
+      tf.summary.scalar('correct/%d' % (cnt), tf.cast(tf.equal(cur_predict, cur_label), tf.int32))
 
     # Define the metrics:
     names_to_values, names_to_updates = slim.metrics.aggregate_metric_map({
