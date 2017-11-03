@@ -152,8 +152,8 @@ def main(_):
     max_logits = tf.reduce_max(logits, axis=1)
     themaps = tf.gradients(max_logits, images)
     themaps = themaps[0]
-    #themaps = tf.multiply(tf.sign(images), themaps)
-    themaps = tf.multiply(images, themaps) # Count the contribution of each pixel to classification
+    themaps = tf.multiply(tf.sign(images), themaps)
+    #themaps = tf.multiply(images, themaps) # Count the contribution of each pixel to classification
     #themaps = tf.abs(themaps)
 
     # negative and positive maps contributed to classification
