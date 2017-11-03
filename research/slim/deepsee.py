@@ -152,21 +152,32 @@ def main(_):
     max_logits = tf.reduce_max(logits, axis=1)
     themaps = tf.gradients(max_logits, images)
     themaps = themaps[0]
-    themaps = tf.multiply(tf.sign(images), themaps)
+    #themaps = tf.multiply(tf.sign(images), themaps)
+    themaps = tf.multiply(images, themaps)
+    #themaps = tf.abs(themaps)
 
-    # clip all negative values
+    # negative and positive maps contributed to classification
     where_cond = tf.less(themaps, 0)
-    themaps = tf.where(where_cond,
+    #neg_maps = tf.where(where_cond,
+    #                    tf.abs(themaps),
+    #                    tf.zeros_like(themaps))
+    pos_maps = tf.where(where_cond,
                        tf.zeros_like(themaps),
                        themaps)
     # scale to (0, 1)
-    max_see = tf.reduce_max(themaps, -1, keep_dims=True)
+    max_see = tf.reduce_max(pos_maps, -1, keep_dims=True)
     max_see = tf.reduce_max(max_see, -2, keep_dims=True)
     max_see = tf.reduce_max(max_see, -3, keep_dims=True)
-    themaps = tf.divide(themaps, max_see)
+    pos_maps = tf.divide(pos_maps, max_see)
+    pos_maps = tf.image.rgb_to_grayscale(pos_maps)
 
-    tf.summary.image('themaps', themaps, max_outputs=4)
-    tf.summary.image('images', images, max_outputs=4)
+    # add to summary
+    max_outputs=4
+    tf.summary.image(  'images',   images, max_outputs=max_outputs)
+    tf.summary.image( 'themaps',  themaps, max_outputs=max_outputs)
+    tf.summary.image('pos_maps', pos_maps, max_outputs=max_outputs)
+    #tf.summary.image('neg_maps', neg_maps, max_outputs=max_outputs)
+
 
     predictions = tf.argmax(logits, 1)
     labels = tf.squeeze(labels)
