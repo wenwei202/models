@@ -154,8 +154,8 @@ def main(_):
     max_logits = tf.reduce_max(logits, axis=1)
     themaps = tf.gradients(max_logits, images)
     themaps = themaps[0]
-    themaps = tf.multiply(tf.sign(images), themaps)
-    #themaps = tf.multiply(images, themaps) # Count the contribution of each pixel to classification
+    #themaps = tf.multiply(tf.sign(images), themaps)
+    themaps = tf.multiply(images, themaps) # Count the contribution of each pixel to classification
     #themaps = tf.abs(themaps)
 
     # negative and positive maps contributed to classification
@@ -166,6 +166,7 @@ def main(_):
     pos_maps = tf.where(where_cond,
                        tf.zeros_like(themaps),
                        themaps)
+    #pos_maps = tf.abs(themaps)
     # scale to (0, 1)
     max_see = tf.reduce_max(pos_maps, -1, keep_dims=True)
     max_see = tf.reduce_max(max_see, -2, keep_dims=True)
@@ -176,7 +177,7 @@ def main(_):
     pos_maps = tf.image.rgb_to_grayscale(pos_maps)
 
     # get shown images
-    thre = 0.25
+    thre = 0.2
     overlay_maps = tf.where(tf.less(pos_maps, thre),
                         tf.zeros_like(pos_maps),
                         tf.ones_like(pos_maps))
@@ -188,7 +189,7 @@ def main(_):
                             shown_images)
 
     # add to summary
-    max_outputs=4
+    max_outputs=FLAGS.batch_size
     tf.summary.image(  'images',   shown_images, max_outputs=max_outputs)
     tf.summary.image( 'themaps',  themaps, max_outputs=max_outputs)
     tf.summary.image('pos_maps', pos_maps, max_outputs=max_outputs)
