@@ -81,6 +81,8 @@ tf.app.flags.DEFINE_integer(
 
 FLAGS = tf.app.flags.FLAGS
 
+def _add_mean(images):
+  return tf.add(images, tf.constant([123.68, 116.78, 103.94]))
 
 def main(_):
   if not FLAGS.dataset_dir:
@@ -169,12 +171,25 @@ def main(_):
     max_see = tf.reduce_max(max_see, -2, keep_dims=True)
     max_see = tf.reduce_max(max_see, -3, keep_dims=True)
     pos_maps = tf.divide(pos_maps, max_see)
+
     # rgb to gray
     pos_maps = tf.image.rgb_to_grayscale(pos_maps)
 
+    # get shown images
+    thre = 0.25
+    overlay_maps = tf.where(tf.less(pos_maps, thre),
+                        tf.zeros_like(pos_maps),
+                        tf.ones_like(pos_maps))
+    overlay_maps = tf.concat([tf.zeros_like(overlay_maps), overlay_maps, tf.zeros_like(overlay_maps)], 3)
+    overlay_maps = overlay_maps * 255
+    shown_images = _add_mean(images)
+    shown_images = tf.where(tf.greater(tf.tile(pos_maps, [1,1,1,3]), thre),
+                            overlay_maps,
+                            shown_images)
+
     # add to summary
     max_outputs=4
-    tf.summary.image(  'images',   images, max_outputs=max_outputs)
+    tf.summary.image(  'images',   shown_images, max_outputs=max_outputs)
     tf.summary.image( 'themaps',  themaps, max_outputs=max_outputs)
     tf.summary.image('pos_maps', pos_maps, max_outputs=max_outputs)
     #tf.summary.image('neg_maps', neg_maps, max_outputs=max_outputs)
