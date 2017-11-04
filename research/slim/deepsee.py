@@ -174,7 +174,9 @@ def main(_):
     pos_maps = tf.divide(pos_maps, max_see)
 
     # rgb to gray
-    pos_maps = tf.image.rgb_to_grayscale(pos_maps)
+    channel_num = pos_maps.get_shape().as_list()[-1]
+    if channel_num==3:
+      pos_maps = tf.image.rgb_to_grayscale(pos_maps)
 
     # get shown images
     thre = 0.2
@@ -183,7 +185,11 @@ def main(_):
                         tf.ones_like(pos_maps))
     overlay_maps = tf.concat([tf.zeros_like(overlay_maps), overlay_maps, tf.zeros_like(overlay_maps)], 3)
     overlay_maps = overlay_maps * 255
-    shown_images = _add_mean(images)
+    if FLAGS.model_name == 'lenet':
+      shown_images = images*128 + 128
+      shown_images = tf.image.grayscale_to_rgb(shown_images)
+    else:
+      shown_images = _add_mean(images)
     shown_images = tf.where(tf.greater(tf.tile(pos_maps, [1,1,1,3]), thre),
                             overlay_maps,
                             shown_images)
