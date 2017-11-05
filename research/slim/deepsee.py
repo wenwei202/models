@@ -24,6 +24,7 @@ import tensorflow as tf
 from datasets import dataset_factory
 from nets import nets_factory
 from preprocessing import preprocessing_factory
+import re
 
 slim = tf.contrib.slim
 
@@ -155,7 +156,8 @@ def main(_):
     themaps = tf.gradients(max_logits, images)
     themaps = themaps[0]
     #themaps = tf.multiply(tf.sign(images), themaps)
-    themaps = tf.multiply(images, themaps) # Count the contribution of each pixel to classification
+    with tf.control_dependencies([tf.Print(themaps,[themaps],first_n=3)]):
+      themaps = tf.multiply(images, themaps) # Count the contribution of each pixel to classification
     #themaps = tf.abs(themaps)
 
     # negative and positive maps contributed to classification
@@ -188,6 +190,8 @@ def main(_):
     if FLAGS.model_name == 'lenet':
       shown_images = images*128 + 128
       shown_images = tf.image.grayscale_to_rgb(shown_images)
+    elif re.match('^(inception).*', FLAGS.model_name):
+      shown_images = (images + 1)*128
     else:
       shown_images = _add_mean(images)
     shown_images = tf.where(tf.greater(tf.tile(pos_maps, [1,1,1,3]), thre),
@@ -207,9 +211,13 @@ def main(_):
     for cnt in range(0, max_outputs):
       cur_predict = tf.reshape(tf.gather(predictions, [cnt]), [])
       cur_label = tf.reshape(tf.gather(labels, [cnt]),[])
+      cur_max_logit = tf.reshape(tf.gather(max_logits, [cnt]),[])
+      cur_map = tf.gather(themaps, [cnt])
       tf.summary.scalar('prediction/%d'%(cnt),cur_predict)
       tf.summary.scalar('label/%d' % (cnt), cur_label)
       tf.summary.scalar('correct/%d' % (cnt), tf.cast(tf.equal(cur_predict, cur_label), tf.int32))
+      tf.summary.scalar('max_logit/%d' % (cnt), cur_max_logit )
+      tf.summary.scalar('bias_rate/%d' % (cnt), (cur_max_logit-tf.reduce_sum(cur_map))/cur_max_logit)
 
     # Define the metrics:
     names_to_values, names_to_updates = slim.metrics.aggregate_metric_map({
