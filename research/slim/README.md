@@ -1,3 +1,10 @@
+# Dependencies
++ tf 1.4
++ python 2.7 (Anaconda)
++ cuda 8.0
++ cudnn 6
++ Ubuntu 16.04
+
 # TensorFlow-Slim image classification model library
 
 [TF-slim](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/contrib/slim)
