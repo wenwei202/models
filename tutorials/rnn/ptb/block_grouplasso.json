@@ -1,0 +1,10 @@
+{
+  "grouplasso":{
+    "global_decay": 0.005,
+    "Model/RNN/multi_rnn_cell/cell_1/basic_lstm_cell/weights": {
+      "block_decay_multi": [1.0, 1.0],
+      "block_row_size":[3000,3000],
+      "block_col_size":[3000,3000]
+    }
+  }
+}

@@ -1,23 +1,9 @@
 # TensorFlow Models
 
-This repository contains machine learning models implemented in
-[TensorFlow](https://tensorflow.org). The models are maintained by their
-respective authors.
+This repository contains a number of different models implemented in [TensorFlow](https://tensorflow.org):
 
-To propose a model for inclusion please submit a pull request.
+The [official models](official) are a collection of example models that use TensorFlow's high-level APIs. They are intended to be well-maintained, tested, and kept up to date with the latest stable TensorFlow API. They should also be reasonably optimized for fast performance while still being easy to read. We especially recommend newer TensorFlow users to start here.
 
+The [research models](research) are a large collection of models implemented in TensorFlow by researchers.
 
-## Models
-- [autoencoder](autoencoder) -- various autoencoders
-- [differential_privacy](differential_privacy) -- privacy-preserving student models from multiple teachers
-- [im2txt](im2txt) -- image-to-text neural network for image captioning.
-- [inception](inception) -- deep convolutional networks for computer vision
-- [namignizer](namignizer) -- recognize and generate names
-- [neural_gpu](neural_gpu) -- highly parallel neural computer
-- [neural_programmer](neural_programmer) -- neural network augmented with logic and mathematic operations.
-- [resnet](resnet) -- deep and wide residual networks
-- [slim](slim) -- image classification models in TF-Slim
-- [swivel](swivel) -- the Swivel algorithm for generating word embeddings
-- [syntaxnet](syntaxnet) -- neural models of natural language syntax
-- [textsum](textsum) -- sequence-to-sequence with attention model for text summarization.
-- [transformer](transformer) -- spatial transformer network, which allows the spatial manipulation of data within the network
+The [tutorial models](tutorials) are models described in the [TensorFlow tutorials](https://www.tensorflow.org/tutorials/).
