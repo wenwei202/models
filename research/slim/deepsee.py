@@ -203,9 +203,11 @@ def main(_):
       shown_images = (images + 1)*128
     else:
       shown_images = _add_mean(images)
-    shown_images = tf.where(tf.greater(tf.tile(pos_maps, [1,1,1,3]), thre),
-                            overlay_maps,
-                            shown_images)
+    #shown_images = tf.where(tf.greater(tf.tile(pos_maps, [1,1,1,3]), thre),
+    #                        overlay_maps,
+    #                        shown_images)
+    infuse_coef = tf.tile(pos_maps, [1,1,1,3])
+    shown_images = (1-infuse_coef)*(shown_images*0.4)+infuse_coef*overlay_maps
 
     predictions = tf.argmax(logits, 1)
     labels = tf.squeeze(labels)
