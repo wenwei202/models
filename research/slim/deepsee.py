@@ -207,26 +207,29 @@ def main(_):
                             overlay_maps,
                             shown_images)
 
-    # add to summary
-    max_outputs=FLAGS.batch_size
-    tf.summary.image(  'images',   shown_images, max_outputs=max_outputs)
-    tf.summary.image( 'themaps',  themaps, max_outputs=max_outputs)
-    tf.summary.image('pos_maps', pos_maps, max_outputs=max_outputs)
-    #tf.summary.image('neg_maps', neg_maps, max_outputs=max_outputs)
-
     predictions = tf.argmax(logits, 1)
     labels = tf.squeeze(labels)
 
-    for cnt in range(0, max_outputs):
-      cur_predict = tf.reshape(tf.gather(predictions, [cnt]), [])
-      cur_label = tf.reshape(tf.gather(labels, [cnt]),[])
-      cur_max_logit = tf.reshape(tf.gather(max_logits, [cnt]),[])
-      cur_map = tf.gather(themaps, [cnt])
-      tf.summary.scalar('prediction/%d'%(cnt),cur_predict)
-      tf.summary.scalar('label/%d' % (cnt), cur_label)
-      tf.summary.scalar('correct/%d' % (cnt), tf.cast(tf.equal(cur_predict, cur_label), tf.int32))
-      tf.summary.scalar('max_logit/%d' % (cnt), cur_max_logit )
-      tf.summary.scalar('bias_rate/%d' % (cnt), (cur_max_logit-tf.reduce_sum(cur_map))/cur_max_logit)
+    #for cnt in range(0, max_outputs):
+    #  cur_predict = tf.reshape(tf.gather(predictions, [cnt]), [])
+    #  cur_label = tf.reshape(tf.gather(labels, [cnt]),[])
+    #  cur_max_logit = tf.reshape(tf.gather(max_logits, [cnt]),[])
+    #  cur_map = tf.gather(themaps, [cnt])
+    #  tf.summary.scalar('prediction/%d'%(cnt),cur_predict)
+    #  tf.summary.scalar('label/%d' % (cnt), cur_label)
+    #  tf.summary.scalar('correct/%d' % (cnt), tf.cast(tf.equal(cur_predict, cur_label), tf.int32))
+    #  tf.summary.scalar('max_logit/%d' % (cnt), cur_max_logit )
+    #  tf.summary.scalar('bias_rate/%d' % (cnt), (cur_max_logit-tf.reduce_sum(cur_map))/cur_max_logit)
+    with tf.control_dependencies([tf.Print(themaps, [predictions], first_n=3, summarize=FLAGS.batch_size)]):
+      with tf.control_dependencies([tf.Print(themaps, [labels], first_n=3, summarize=FLAGS.batch_size)]):
+        themaps = tf.identity(themaps)
+
+    # add to summary
+    max_outputs = FLAGS.batch_size
+    tf.summary.image('images', shown_images, max_outputs=max_outputs)
+    tf.summary.image('themaps', themaps, max_outputs=max_outputs)
+    tf.summary.image('pos_maps', pos_maps, max_outputs=max_outputs)
+    # tf.summary.image('neg_maps', neg_maps, max_outputs=max_outputs)
 
     # Define the metrics:
     names_to_values, names_to_updates = slim.metrics.aggregate_metric_map({
@@ -261,7 +264,7 @@ def main(_):
         checkpoint_path=checkpoint_path,
         logdir=FLAGS.eval_dir,
         num_evals=num_batches,
-        eval_op=list(names_to_updates.values())+[themaps],
+        eval_op=list(names_to_updates.values()),
         variables_to_restore=variables_to_restore)
 
 
