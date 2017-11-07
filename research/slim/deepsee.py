@@ -194,8 +194,8 @@ def main(_):
     overlay_maps = tf.where(tf.less(pos_maps, thre),
                         tf.zeros_like(pos_maps),
                         tf.ones_like(pos_maps))
-    overlay_maps = tf.concat([tf.zeros_like(overlay_maps), overlay_maps, tf.zeros_like(overlay_maps)], 3)
-    overlay_maps = overlay_maps * 255
+    # brightest color -- Fluorescent Yellow-Green rgb(153, 255, 0)
+    overlay_maps = tf.concat([overlay_maps*153, overlay_maps*255, tf.zeros_like(overlay_maps)], 3)
     if FLAGS.model_name == 'lenet':
       shown_images = images*128 + 128
       shown_images = tf.image.grayscale_to_rgb(shown_images)
