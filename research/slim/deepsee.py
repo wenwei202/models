@@ -80,6 +80,10 @@ tf.app.flags.DEFINE_float(
 tf.app.flags.DEFINE_integer(
     'eval_image_size', None, 'Eval image size')
 
+tf.app.flags.DEFINE_float(
+    'map_density', 0.01,
+    'The fraction of map to draw.')
+
 FLAGS = tf.app.flags.FLAGS
 
 def _add_mean(images):
@@ -156,12 +160,12 @@ def main(_):
     themaps = tf.gradients(max_logits, images)
     themaps = themaps[0]
     with tf.control_dependencies([tf.Print(themaps,[themaps],first_n=3)]):
-      themaps = tf.multiply(tf.sign(images), themaps)
+      #themaps = tf.multiply(tf.sign(images), themaps)
       #themaps = tf.multiply(images, themaps) # Count the contribution of each pixel to classification
-      #themaps = tf.abs(themaps)
+      themaps = tf.abs(themaps)
 
     # negative and positive maps contributed to classification
-    where_cond = tf.less(themaps, 0)
+    where_cond = tf.less(themaps, 0.0001)
     #neg_maps = tf.where(where_cond,
     #                    tf.abs(themaps),
     #                    tf.zeros_like(themaps))
@@ -180,8 +184,13 @@ def main(_):
     if channel_num==3:
       pos_maps = tf.image.rgb_to_grayscale(pos_maps)
 
+    # get threshold
+    pos_frac = FLAGS.map_density # how much fraction of pos_maps used for visualization
+    nonzero_frac = 1.0 - tf.nn.zero_fraction(pos_maps)
+    thre = tf.contrib.distributions.percentile(pos_maps, 100 - 100*pos_frac*nonzero_frac)
+
     # get shown images
-    thre = 0.2
+    #thre = 0.2
     overlay_maps = tf.where(tf.less(pos_maps, thre),
                         tf.zeros_like(pos_maps),
                         tf.ones_like(pos_maps))
