@@ -81,8 +81,11 @@ tf.app.flags.DEFINE_integer(
     'eval_image_size', None, 'Eval image size')
 
 tf.app.flags.DEFINE_float(
-    'map_density', 0.01,
+    'map_density', 1.0,
     'The fraction of map to draw.')
+
+tf.app.flags.DEFINE_string(
+    'layer_name', None, 'The name of layer to analyze seemap.')
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -143,7 +146,7 @@ def main(_):
     ####################
     # Define the model #
     ####################
-    logits, _ = network_fn(images)
+    logits, end_points = network_fn(images)
 
     if FLAGS.moving_average_decay:
       variable_averages = tf.train.ExponentialMovingAverage(
@@ -154,10 +157,17 @@ def main(_):
     else:
       variables_to_restore = slim.get_variables_to_restore()
 
+    # get representation with max contribution
+    if FLAGS.layer_name:
+      target_features = end_points[FLAGS.layer_name]
+    else:
+      target_features = logits
+    target_shape = target_features.get_shape().as_list()
+    axis2reduce = range(1, len(target_shape))
 
     # get map
-    max_logits = tf.reduce_max(logits, axis=1)
-    themaps = tf.gradients(max_logits, images)
+    max_features = tf.reduce_max(target_features, axis=axis2reduce)
+    themaps = tf.gradients(max_features, images)
     themaps = themaps[0]
     with tf.control_dependencies([tf.Print(themaps,[themaps],first_n=3)]):
       #themaps = tf.multiply(tf.sign(images), themaps)
@@ -172,7 +182,6 @@ def main(_):
     pos_maps = tf.where(where_cond,
                        tf.zeros_like(themaps),
                        themaps)
-    #pos_maps = tf.abs(themaps)
     # scale to (0, 1)
     max_see = tf.reduce_max(pos_maps, -1, keep_dims=True)
     max_see = tf.reduce_max(max_see, -2, keep_dims=True)
@@ -195,7 +204,7 @@ def main(_):
                         tf.zeros_like(pos_maps),
                         tf.ones_like(pos_maps))
     # brightest color -- Fluorescent Yellow-Green rgb(153, 255, 0)
-    overlay_maps = tf.concat([overlay_maps*153, overlay_maps*255, tf.zeros_like(overlay_maps)], 3)
+    overlay_maps = tf.concat([tf.zeros_like(overlay_maps), overlay_maps*255, tf.zeros_like(overlay_maps)], 3)
     if FLAGS.model_name == 'lenet':
       shown_images = images*128 + 128
       shown_images = tf.image.grayscale_to_rgb(shown_images)
