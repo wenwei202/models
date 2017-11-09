@@ -25,6 +25,7 @@ from datasets import dataset_factory
 from nets import nets_factory
 from preprocessing import preprocessing_factory
 import re
+import json
 
 slim = tf.contrib.slim
 
@@ -85,7 +86,7 @@ tf.app.flags.DEFINE_float(
     'The fraction of map to draw.')
 
 tf.app.flags.DEFINE_string(
-    'layer_name', None, 'The name of layer to analyze seemap.')
+  "config_file", None, "The file to set configurations")
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -95,6 +96,9 @@ def _add_mean(images):
 def main(_):
   if not FLAGS.dataset_dir:
     raise ValueError('You must supply the dataset directory with --dataset_dir')
+
+  with open(FLAGS.config_file, 'r') as fi:
+    config_params = json.load(fi)
 
   tf.logging.set_verbosity(tf.logging.INFO)
   with tf.Graph().as_default():
@@ -158,16 +162,20 @@ def main(_):
       variables_to_restore = slim.get_variables_to_restore()
 
     # get representation with max contribution
-    if FLAGS.layer_name:
-      target_features = end_points[FLAGS.layer_name]
-    else:
-      target_features = logits
+    target_features = end_points[config_params['target']['feature']]
     target_shape = target_features.get_shape().as_list()
-    axis2reduce = range(1, len(target_shape))
+    # study kth largest feature or top k largest featureS
+    top_k_feature = tf.nn.top_k(tf.reshape(target_features, [target_shape[0],-1]),
+                                    config_params['target']['k_in_top'])[0]
+    if config_params['mode']=='individual':
+      kth_features = tf.reduce_min(top_k_feature, axis=1)
+    elif config_params['mode']=='accumulative':
+      kth_features = tf.reduce_sum(top_k_feature, axis=1)
+    else:
+      raise ValueError('Wrong config_params.mode')
 
     # get map
-    max_features = tf.reduce_max(target_features, axis=axis2reduce)
-    themaps = tf.gradients(max_features, images)
+    themaps = tf.gradients(kth_features, images)
     themaps = themaps[0]
     with tf.control_dependencies([tf.Print(themaps,[themaps],first_n=3)]):
       #themaps = tf.multiply(tf.sign(images), themaps)

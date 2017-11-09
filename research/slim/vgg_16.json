@@ -1,0 +1,12 @@
+{
+  "mode":"accumulative",
+  "target": {
+    "feature": "vgg_16/pool5",
+    "k_in_top": 100
+    },
+  "mid_features":[
+    "vgg_16/pool4",
+    "vgg_16/pool3"
+    ],
+  "branch_num": 2
+}
