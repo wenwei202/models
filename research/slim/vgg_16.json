@@ -2,7 +2,7 @@
   "mode":"accumulative",
   "target": {
     "feature": "vgg_16/pool5",
-    "k_in_top": 100
+    "k_in_top": 2
     },
   "mid_features":[
     "vgg_16/pool4",

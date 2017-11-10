@@ -180,16 +180,16 @@ def main(_):
     with tf.control_dependencies([tf.Print(themaps,[themaps],first_n=3)]):
       #themaps = tf.multiply(tf.sign(images), themaps)
       #themaps = tf.multiply(images, themaps) # Count the contribution of each pixel to classification
-      themaps = tf.abs(themaps)
+      #themaps = tf.abs(themaps)
+      themaps = tf.identity(themaps)
 
     # negative and positive maps contributed to classification
-    where_cond = tf.less(themaps, 0.0001)
-    #neg_maps = tf.where(where_cond,
-    #                    tf.abs(themaps),
-    #                    tf.zeros_like(themaps))
-    pos_maps = tf.where(where_cond,
-                       tf.zeros_like(themaps),
-                       themaps)
+    #where_cond = tf.less(themaps, 0.0001)
+    #pos_maps = tf.where(where_cond,
+    #                   tf.zeros_like(themaps),
+    #                   themaps)
+    pos_maps = tf.abs(themaps)
+
     # scale to (0, 1)
     max_see = tf.reduce_max(pos_maps, -1, keep_dims=True)
     max_see = tf.reduce_max(max_see, -2, keep_dims=True)
